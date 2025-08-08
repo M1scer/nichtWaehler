@@ -1,27 +1,16 @@
-<table id="myTable">
-  <thead>
-    <tr>
-      <th>Datum</th>
-      <th>Aktion</th>
-      <th>Kategorie</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>2025-03-01</td><td>Beispielaktion A</td><td>Skandal</td></tr>
-    <tr><td>2025-04-15</td><td>Gesetzesinitiative B</td><td>Gesetzgebung</td></tr>
-  </tbody>
-</table>
+---
+layout: default
+title: Kritik an CDU/CSU – Übersicht
+---
 
-<input type="text" id="searchInput" placeholder="Filter nach Kategorie...">
+Hier findest du eine Übersicht mit Aktionen und Ereignissen der CDU/CSU:
 
-<script>
-  const input = document.getElementById('searchInput');
-  input.addEventListener('keyup', function() {
-    const filter = input.value.toLowerCase();
-    const rows = document.querySelectorAll('#myTable tbody tr');
-    rows.forEach(row => {
-      const category = row.cells[2].textContent.toLowerCase();
-      row.style.display = category.includes(filter) ? '' : 'none';
-    });
-  });
-</script>
+| Datum      | Aktion                 | Kategorie     |
+|------------|------------------------|---------------|
+| 2025-03-01 | Beispielaktion A       | Skandal       |
+| 2025-04-15 | Gesetzesinitiative B   | Gesetzgebung  |
+| 2025-05-20 | Pressemitteilung C     | Kommunikation |
+
+---
+
+Gib im Suchfeld oben eine Kategorie ein, um die Tabelle zu filtern.
