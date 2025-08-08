@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ page.title }}</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background-color: #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>{{ page.title }}</h1>
+  {{ content }}
+
+  <input type="text" id="searchInput" placeholder="Filter nach Kategorie..." style="margin-top:20px; margin-bottom:20px; padding:8px; width: 300px;" />
+
+  <script>
+    const input = document.getElementById('searchInput');
+    input.addEventListener('keyup', function() {
+      const filter = input.value.toLowerCase();
+      const rows = document.querySelectorAll('table tbody tr');
+      rows.forEach(row => {
+        const category = row.cells[2].textContent.toLowerCase();
+        row.style.display = category.includes(filter) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
