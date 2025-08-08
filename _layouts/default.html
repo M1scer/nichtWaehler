@@ -7,30 +7,107 @@
     table {
       border-collapse: collapse;
       width: 100%;
+      margin-top: 10px;
     }
     th, td {
       border: 1px solid #ccc;
-      padding: 8px;
+      padding: 6px 8px;
+      text-align: left;
     }
     th {
       background-color: #eee;
+    }
+    input.filter-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 6px;
+      margin-bottom: 4px;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
   <h1>{{ page.title }}</h1>
-  {{ content }}
 
-  <input type="text" id="searchInput" placeholder="Filter nach Kategorie..." style="margin-top:20px; margin-bottom:20px; padding:8px; width: 300px;" />
+  <table id="filterTable">
+    <thead>
+      <tr>
+        <th><input type="text" class="filter-input" placeholder="Filter Datum" data-col="0" /></th>
+        <th><input type="text" class="filter-input" placeholder="Filter Aktion / Thema" data-col="1" /></th>
+        <th><input type="text" class="filter-input" placeholder="Filter Quelle 1" data-col="2" /></th>
+        <th><input type="text" class="filter-input" placeholder="Filter Quelle 2" data-col="3" /></th>
+        <th><input type="text" class="filter-input" placeholder="Filter Kategorie" data-col="4" /></th>
+      </tr>
+      <tr>
+        <th>Datum</th>
+        <th>Aktion / Thema</th>
+        <th>Quelle 1</th>
+        <th>Quelle 2</th>
+        <th>Kategorie</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2025-03-01</td>
+        <td>Beispielaktion A</td>
+        <td><a href="https://quelle1.de" target="_blank">Quelle1</a></td>
+        <td><a href="https://quelle2.de" target="_blank">Quelle2</a></td>
+        <td>Skandal</td>
+      </tr>
+      <tr>
+        <td>2025-04-15</td>
+        <td>Gesetzesinitiative B</td>
+        <td><a href="https://quelle3.de" target="_blank">Quelle3</a></td>
+        <td><a href="https://quelle4.de" target="_blank">Quelle4</a></td>
+        <td>Gesetzgebung</td>
+      </tr>
+      <tr>
+        <td>2025-05-20</td>
+        <td>Pressemitteilung C</td>
+        <td><a href="https://quelle5.de" target="_blank">Quelle5</a></td>
+        <td><a href="https://quelle6.de" target="_blank">Quelle6</a></td>
+        <td>Kommunikation</td>
+      </tr>
+    </tbody>
+  </table>
 
   <script>
-    const input = document.getElementById('searchInput');
-    input.addEventListener('keyup', function() {
-      const filter = input.value.toLowerCase();
-      const rows = document.querySelectorAll('table tbody tr');
-      rows.forEach(row => {
-        const category = row.cells[2].textContent.toLowerCase();
-        row.style.display = category.includes(filter) ? '' : 'none';
+    // Alle Filter Inputs sammeln
+    const filters = document.querySelectorAll('input.filter-input');
+    filters.forEach(input => {
+      input.addEventListener('keyup', () => {
+        const table = document.getElementById('filterTable');
+        const rows = table.tBodies[0].rows;
+        const filterValues = Array.from(filters).map(i => i.value.toLowerCase());
+
+        for (let row of rows) {
+          let show = true;
+          for (let col = 0; col < filterValues.length; col++) {
+            let cellText = row.cells[col].textContent.toLowerCase();
+
+            // Bei Quellen können auch Linktexte oder URLs gefiltert werden
+            if(col === 2 || col ===3) {
+              // auch href der Links checken
+              const links = row.cells[col].querySelectorAll('a');
+              let foundInLinks = false;
+              links.forEach(link => {
+                if(link.href.toLowerCase().includes(filterValues[col]) || link.textContent.toLowerCase().includes(filterValues[col])) {
+                  foundInLinks = true;
+                }
+              });
+              if (!foundInLinks && !cellText.includes(filterValues[col])) {
+                show = false;
+                break;
+              }
+            } else {
+              if (!cellText.includes(filterValues[col])) {
+                show = false;
+                break;
+              }
+            }
+          }
+          row.style.display = show ? '' : 'none';
+        }
       });
     });
   </script>
