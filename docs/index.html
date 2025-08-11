@@ -2,265 +2,248 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Durchsuchbare Liste</title>
-  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Datenanzeige mit Filter & Sortierung</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
+      margin: 1em;
       background: #f9f9f9;
+      color: #333;
     }
     h1 {
-      text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 0.5em;
     }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 20px;
-      justify-content: space-between;
-    }
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 8px 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    select {
-      padding: 8px 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      min-width: 150px;
+    input, select {
+      margin: 0.3em 0.5em 1em 0;
+      padding: 0.4em 0.6em;
+      font-size: 1em;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
     th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
+      border: 1px solid #ddd;
+      padding: 0.5em 0.8em;
       text-align: left;
-      vertical-align: top;
-      user-select: none;
+      vertical-align: middle;
     }
     th {
-      background: #f1f1f1;
+      background: #007acc;
+      color: white;
       cursor: pointer;
+      user-select: none;
     }
     th.sort-asc::after {
       content: " ▲";
-      font-size: 12px;
     }
     th.sort-desc::after {
       content: " ▼";
-      font-size: 12px;
+    }
+    tr:nth-child(even) {
+      background: #f4faff;
     }
     tr:hover {
-      background: #f5faff;
+      background: #e1f0ff;
     }
-    a {
-      color: #0077cc;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    td.center {
+    .bool-true {
+      color: green;
+      font-weight: bold;
+      font-size: 1.3em;
       text-align: center;
     }
-    @media (max-width: 700px) {
-      table, thead, tbody, tr, th, td {
-        display: block;
-      }
-      thead tr {
-        display: none;
-      }
-      tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 10px;
-      }
-      td {
-        border: none;
-        padding: 6px 0;
-        position: relative;
-        padding-left: 50%;
-      }
-      td::before {
-        position: absolute;
-        left: 15px;
-        width: 45%;
-        white-space: nowrap;
-        font-weight: bold;
-      }
-      td:nth-of-type(1)::before { content: "Datum"; }
-      td:nth-of-type(2)::before { content: "Titel"; }
-      td:nth-of-type(3)::before { content: "Partei"; }
-      td:nth-of-type(4)::before { content: "Regierungsbeteiligung"; }
-      td:nth-of-type(5)::before { content: "Kategorie"; }
-      td:nth-of-type(6)::before { content: "Beschreibung"; }
-      td:nth-of-type(7)::before { content: "Quellen"; }
+    .bool-false {
+      color: red;
+      font-weight: bold;
+      font-size: 1.3em;
+      text-align: center;
+    }
+    .loading {
+      font-style: italic;
+      margin-top: 2em;
+      color: #666;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 2em;
     }
   </style>
 </head>
 <body>
-  <h1>Durchsuchbare Liste</h1>
-  <div class="controls">
-    <input type="text" id="search" placeholder="Suchbegriff eingeben..." aria-label="Suche" />
-    <select id="categoryFilter" aria-label="Kategorie filtern">
-      <option value="">Alle Kategorien</option>
-    </select>
-  </div>
 
-  <table id="resultsTable" aria-live="polite" aria-describedby="resultCount">
+  <h1>Datenanzeige</h1>
+
+  <input type="text" id="searchInput" placeholder="Suche..." />
+
+  <select id="categoryFilter">
+    <option value="">Alle Kategorien</option>
+  </select>
+
+  <table id="resultsTable" aria-label="Daten Tabelle">
     <thead>
       <tr>
         <th data-key="Datum">Datum</th>
-        <th data-key="Titel">Titel</th>
+        <th data-key="Regierungsbeteiligung">Regierung</th>
         <th data-key="Partei">Partei</th>
-        <th data-key="Regierungsbeteiligung">Regierungsbeteiligung</th>
+        <th data-key="Titel">Titel</th>
+        <th data-key="Beschreibung">Beschreibung</th>
         <th data-key="Kategorie">Kategorie</th>
-        <th>Beschreibung</th>
-        <th>Quellen</th>
+        <th data-key="Quelle1">Quelle 1</th>
+        <th data-key="Quelle2">Quelle 2</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td colspan="7">Lade Daten...</td></tr>
+      <tr><td colspan="8" class="loading">Lade Daten...</td></tr>
     </tbody>
   </table>
-  <p id="resultCount" style="margin-top:10px;"></p>
 
   <script>
-    let data = [];
-    let filteredData = [];
-    let sortKey = null;
-    let sortAsc = true;
-
-    const searchInput = document.getElementById('search');
+    const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const resultsTableBody = document.querySelector('#resultsTable tbody');
-    const resultCount = document.getElementById('resultCount');
+    const tableHeaders = document.querySelectorAll('#resultsTable thead th');
 
-    const options = {
-      keys: ['Datum', 'Partei', 'Titel', 'Beschreibung', 'Kategorie', 'Quelle1', 'Quelle2'],
-      threshold: 0.3
-    };
-    let fuse;
+    let data = [];
+    let filteredData = [];
+    let currentSort = { key: null, direction: 'asc' };
 
-    // Daten laden
-    fetch('../data/liste.json')
-      .then(r => r.json())
-      .then(json => {
-        data = json;
+    function parseBoolean(val) {
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'string') return val.toLowerCase() === 'true';
+      return false;
+    }
+
+    async function loadAllData() {
+      try {
+        const filesResponse = await fetch('files.json');
+        if (!filesResponse.ok) throw new Error('Konnte files.json nicht laden');
+        const files = await filesResponse.json();
+
+        const allDataArrays = await Promise.all(
+          files.map(filename => fetch(`data/${filename}`).then(r => {
+            if (!r.ok) throw new Error(`Konnte Datei ${filename} nicht laden`);
+            return r.json();
+          }))
+        );
+
+        data = allDataArrays.flat();
         filteredData = data.slice();
 
-        // Kategorien füllen
-        const categories = [...new Set(data.map(item => item.Kategorie).filter(Boolean))].sort();
-        categories.forEach(cat => {
-          const opt = document.createElement('option');
-          opt.value = cat;
-          opt.textContent = cat;
-          categoryFilter.appendChild(opt);
-        });
+        populateCategoryFilter();
+        renderTable();
 
-        fuse = new Fuse(data, options);
-
-        renderTable(filteredData);
-        updateResultCount(filteredData.length);
-      })
-      .catch(e => {
-        resultsTableBody.innerHTML = '<tr><td colspan="7">Fehler beim Laden der Daten.</td></tr>';
-        console.error(e);
-      });
-
-    // Filter + Suche zusammen
-    function filterAndSearch() {
-      let result = data;
-
-      const selectedCategory = categoryFilter.value;
-      if (selectedCategory) {
-        result = result.filter(item => item.Kategorie === selectedCategory);
+      } catch (error) {
+        resultsTableBody.innerHTML = `<tr><td colspan="8" class="error">Fehler beim Laden der Daten: ${error.message}</td></tr>`;
+        console.error(error);
       }
-
-      const query = searchInput.value.trim();
-      if (query) {
-        const fuseResults = fuse.search(query);
-        const fuseItems = fuseResults.map(r => r.item);
-        if (selectedCategory) {
-          filteredData = fuseItems.filter(item => item.Kategorie === selectedCategory);
-        } else {
-          filteredData = fuseItems;
-        }
-      } else {
-        filteredData = result;
-      }
-
-      if (sortKey) {
-        sortTable(sortKey, sortAsc);
-      } else {
-        renderTable(filteredData);
-      }
-      updateResultCount(filteredData.length);
     }
 
-    searchInput.addEventListener('input', filterAndSearch);
-    categoryFilter.addEventListener('change', filterAndSearch);
+    function populateCategoryFilter() {
+      const categories = new Set(data.map(item => item.Kategorie).filter(Boolean));
+      for (const cat of [...categories].sort()) {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      }
+    }
 
-    // Tabelle rendern
-    function renderTable(items) {
-      resultsTableBody.innerHTML = '';
-      if (items.length === 0) {
-        resultsTableBody.innerHTML = '<tr><td colspan="7">Keine Treffer gefunden.</td></tr>';
+    function renderTable() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      const selectedCategory = categoryFilter.value;
+
+      filteredData = data.filter(item => {
+        const matchesCategory = selectedCategory === '' || item.Kategorie === selectedCategory;
+        const searchableText = [
+          item.Datum,
+          item.Partei,
+          item.Titel,
+          item.Beschreibung,
+          item.Kategorie,
+          item.Quelle1,
+          item.Quelle2
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        const matchesSearch = searchableText.includes(searchTerm);
+
+        return matchesCategory && matchesSearch;
+      });
+
+      if (currentSort.key) {
+        filteredData.sort((a, b) => {
+          let valA = a[currentSort.key];
+          let valB = b[currentSort.key];
+
+          if (currentSort.key === 'Datum') {
+            valA = new Date(valA);
+            valB = new Date(valB);
+          }
+
+          if (currentSort.key === 'Regierungsbeteiligung') {
+            valA = parseBoolean(valA);
+            valB = parseBoolean(valB);
+          }
+
+          if (valA === undefined) return 1;
+          if (valB === undefined) return -1;
+
+          if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+          if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      if (filteredData.length === 0) {
+        resultsTableBody.innerHTML = `<tr><td colspan="8">Keine Daten gefunden.</td></tr>`;
         return;
       }
-      items.forEach(item => {
-        resultsTableBody.appendChild(createRow(item));
-      });
+
+      resultsTableBody.innerHTML = '';
+      for (const item of filteredData) {
+        const regBool = parseBoolean(item.Regierungsbeteiligung);
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${item.Datum || ''}</td>
+          <td class="${regBool ? 'bool-true' : 'bool-false'}" aria-label="Regierungsbeteiligung: ${regBool ? 'Ja' : 'Nein'}">
+            ${regBool ? '✓' : '✗'}
+          </td>
+          <td>${item.Partei || ''}</td>
+          <td>${item.Titel || ''}</td>
+          <td>${item.Beschreibung || ''}</td>
+          <td>${item.Kategorie || ''}</td>
+          <td>${item.Quelle1 ? `<a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Link</a>` : ''}</td>
+          <td>${item.Quelle2 ? `<a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Link</a>` : ''}</td>
+        `;
+
+        resultsTableBody.appendChild(tr);
+      }
     }
 
-    function createRow(item) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item.Datum}</td>
-        <td>${escapeHtml(item.Titel)}</td>
-        <td>${escapeHtml(item.Partei)}</td>
-        <td class="center">${item.Regierungsbeteiligung === true || item.Regierungsbeteiligung === "true" ? '✅' : '❌'}</td>
-        <td>${escapeHtml(item.Kategorie)}</td>
-        <td>${escapeHtml(item.Beschreibung || '-')}</td>
-        <td>
-          ${item.Quelle1 ? `<a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Quelle 1</a>` : ''}
-          ${item.Quelle2 ? `<br><a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Quelle 2</a>` : ''}
-        </td>
-      `;
-      return tr;
-    }
+    searchInput.addEventListener('input', renderTable);
+    categoryFilter.addEventListener('change', renderTable);
 
-    // HTML escapen (sicher)
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    // Ergebniszahl aktualisieren
-    function updateResultCount(count) {
-      resultCount.textContent = `Treffer: ${count}`;
-    }
-
-    // Sortierung implementieren
-    document.querySelectorAll('th[data-key]').forEach(th => {
+    tableHeaders.forEach(th => {
       th.addEventListener('click', () => {
-        const key = th.getAttribute('data-key');
-        if (sortKey === key)
+        const key = th.dataset.key;
+        if (currentSort.key === key) {
+          currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSort.key = key;
+          currentSort.direction = 'asc';
+        }
+        tableHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+        th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
+        renderTable();
+      });
+    });
+
+    loadAllData();
+  </script>
+</body>
+</html>
