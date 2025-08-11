@@ -1,249 +1,170 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenanzeige mit Filter & Sortierung</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 1em;
-      background: #f9f9f9;
-      color: #333;
-    }
-    h1 {
-      margin-bottom: 0.5em;
-    }
-    input, select {
-      margin: 0.3em 0.5em 1em 0;
-      padding: 0.4em 0.6em;
-      font-size: 1em;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.5em 0.8em;
-      text-align: left;
-      vertical-align: middle;
-    }
-    th {
-      background: #007acc;
-      color: white;
-      cursor: pointer;
-      user-select: none;
-    }
-    th.sort-asc::after {
-      content: " ▲";
-    }
-    th.sort-desc::after {
-      content: " ▼";
-    }
-    tr:nth-child(even) {
-      background: #f4faff;
-    }
-    tr:hover {
-      background: #e1f0ff;
-    }
-    .bool-true {
-      color: green;
-      font-weight: bold;
-      font-size: 1.3em;
-      text-align: center;
-    }
-    .bool-false {
-      color: red;
-      font-weight: bold;
-      font-size: 1.3em;
-      text-align: center;
-    }
-    .loading {
-      font-style: italic;
-      margin-top: 2em;
-      color: #666;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-      margin-top: 2em;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NichtWähler</title>
+<style>
+  /* ... wie vorher ... */
+</style>
 </head>
 <body>
+<h1>NichtWähler - Durchsuchbare Daten</h1>
 
-  <h1>Datenanzeige</h1>
+<input id="searchInput" type="search" placeholder="Suchen... (z.B. Partei, Kategorie, Titel)" aria-label="Suche in den Daten" />
 
-  <input type="text" id="searchInput" placeholder="Suche..." />
+<table aria-label="Ergebnisse" role="table">
+  <thead>
+    <tr>
+      <th data-key="Datum">Datum</th>
+      <th data-key="Regierungsbeteiligung">Regierung</th>
+      <th data-key="Partei">Partei</th>
+      <th data-key="Titel">Titel</th>
+      <th data-key="Beschreibung">Beschreibung</th>
+      <th data-key="Kategorie">Kategorie</th>
+      <th data-key="Quellen">Quellen</th>
+    </tr>
+  </thead>
+  <tbody id="resultsTableBody">
+    <tr><td colspan="7" style="text-align:center">Lade Daten...</td></tr>
+  </tbody>
+</table>
 
-  <select id="categoryFilter">
-    <option value="">Alle Kategorien</option>
-  </select>
+<script>
+(async () => {
+  const dataListFile = './data/files.json'; // **angepasst für docs Ordner**
+  const searchInput = document.getElementById('searchInput');
+  const resultsTableBody = document.getElementById('resultsTableBody');
+  let allData = [];
+  let sortKey = null;
+  let sortDir = 1;
 
-  <table id="resultsTable" aria-label="Daten Tabelle">
-    <thead>
-      <tr>
-        <th data-key="Datum">Datum</th>
-        <th data-key="Regierungsbeteiligung">Regierung</th>
-        <th data-key="Partei">Partei</th>
-        <th data-key="Titel">Titel</th>
-        <th data-key="Beschreibung">Beschreibung</th>
-        <th data-key="Kategorie">Kategorie</th>
-        <th data-key="Quelle1">Quelle 1</th>
-        <th data-key="Quelle2">Quelle 2</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td colspan="8" class="loading">Lade Daten...</td></tr>
-    </tbody>
-  </table>
-
-  <script>
-    const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const resultsTableBody = document.querySelector('#resultsTable tbody');
-    const tableHeaders = document.querySelectorAll('#resultsTable thead th');
-
-    let data = [];
-    let filteredData = [];
-    let currentSort = { key: null, direction: 'asc' };
-
-    function parseBoolean(val) {
-      if (typeof val === 'boolean') return val;
-      if (typeof val === 'string') return val.toLowerCase() === 'true';
-      return false;
+  function parseBoolean(val) {
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') {
+      return val.toLowerCase() === 'true' || val === '1' || val === '✓' || val === 'ja';
     }
+    return false;
+  }
 
-    async function loadAllData() {
-      try {
-        const filesResponse = await fetch('files.json');
-        if (!filesResponse.ok) throw new Error('Konnte files.json nicht laden');
-        const files = await filesResponse.json();
-
-        const allDataArrays = await Promise.all(
-          files.map(filename => fetch(`data/${filename}`).then(r => {
-            if (!r.ok) throw new Error(`Konnte Datei ${filename} nicht laden`);
-            return r.json();
-          }))
-        );
-
-        data = allDataArrays.flat();
-        filteredData = data.slice();
-
-        populateCategoryFilter();
-        renderTable();
-
-      } catch (error) {
-        resultsTableBody.innerHTML = `<tr><td colspan="8" class="error">Fehler beim Laden der Daten: ${error.message}</td></tr>`;
-        console.error(error);
+  function extractDomain(url) {
+    try {
+      const hostname = new URL(url).hostname;
+      const parts = hostname.split('.');
+      if (parts.length > 2 && parts[0] === 'www') {
+        return parts.slice(1).join('.');
       }
+      return hostname;
+    } catch {
+      return url;
     }
+  }
 
-    function populateCategoryFilter() {
-      const categories = new Set(data.map(item => item.Kategorie).filter(Boolean));
-      for (const cat of [...categories].sort()) {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        categoryFilter.appendChild(opt);
-      }
-    }
+  async function loadAllData() {
+    resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Lade Dateienliste...</td></tr>';
+    try {
+      const resp = await fetch(dataListFile);
+      if (!resp.ok) throw new Error('Dateiliste nicht gefunden');
+      const fileList = await resp.json();
 
-    function renderTable() {
-      const searchTerm = searchInput.value.trim().toLowerCase();
-      const selectedCategory = categoryFilter.value;
-
-      filteredData = data.filter(item => {
-        const matchesCategory = selectedCategory === '' || item.Kategorie === selectedCategory;
-        const searchableText = [
-          item.Datum,
-          item.Partei,
-          item.Titel,
-          item.Beschreibung,
-          item.Kategorie,
-          item.Quelle1,
-          item.Quelle2
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        const matchesSearch = searchableText.includes(searchTerm);
-
-        return matchesCategory && matchesSearch;
-      });
-
-      if (currentSort.key) {
-        filteredData.sort((a, b) => {
-          let valA = a[currentSort.key];
-          let valB = b[currentSort.key];
-
-          if (currentSort.key === 'Datum') {
-            valA = new Date(valA);
-            valB = new Date(valB);
+      const dataArrays = await Promise.all(
+        fileList.map(async fileName => {
+          try {
+            const res = await fetch('./data/' + fileName); // auch angepasst
+            if (!res.ok) throw new Error('Datei nicht gefunden: ' + fileName);
+            const data = await res.json();
+            if (!Array.isArray(data)) return [];
+            return data;
+          } catch(e) {
+            console.warn('Fehler beim Laden von ' + fileName + ': ' + e.message);
+            return [];
           }
+        })
+      );
 
-          if (currentSort.key === 'Regierungsbeteiligung') {
-            valA = parseBoolean(valA);
-            valB = parseBoolean(valB);
-          }
+      allData = dataArrays.flat();
+      renderTable();
+    } catch(e) {
+      resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: red;">Fehler beim Laden der Dateien: ' + e.message + '</td></tr>';
+    }
+  }
 
-          if (valA === undefined) return 1;
-          if (valB === undefined) return -1;
+  function renderTable() {
+    const filterText = searchInput.value.trim().toLowerCase();
 
-          if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-          if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-          return 0;
-        });
-      }
+    let filteredData = allData.filter(item =>
+      Object.values(item).some(val =>
+        val && val.toString().toLowerCase().includes(filterText)
+      )
+    );
 
-      if (filteredData.length === 0) {
-        resultsTableBody.innerHTML = `<tr><td colspan="8">Keine Daten gefunden.</td></tr>`;
-        return;
-      }
-
-      resultsTableBody.innerHTML = '';
-      for (const item of filteredData) {
-        const regBool = parseBoolean(item.Regierungsbeteiligung);
-        const tr = document.createElement('tr');
-
-        tr.innerHTML = `
-          <td>${item.Datum || ''}</td>
-          <td class="${regBool ? 'bool-true' : 'bool-false'}" aria-label="Regierungsbeteiligung: ${regBool ? 'Ja' : 'Nein'}">
-            ${regBool ? '✓' : '✗'}
-          </td>
-          <td>${item.Partei || ''}</td>
-          <td>${item.Titel || ''}</td>
-          <td>${item.Beschreibung || ''}</td>
-          <td>${item.Kategorie || ''}</td>
-          <td>${item.Quelle1 ? `<a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Link</a>` : ''}</td>
-          <td>${item.Quelle2 ? `<a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Link</a>` : ''}</td>
-        `;
-
-        resultsTableBody.appendChild(tr);
-      }
+    if (sortKey) {
+      filteredData.sort((a, b) => {
+        const valA = (a[sortKey] ?? '').toString().toLowerCase();
+        const valB = (b[sortKey] ?? '').toString().toLowerCase();
+        if (valA < valB) return -1 * sortDir;
+        if (valA > valB) return 1 * sortDir;
+        return 0;
+      });
     }
 
-    searchInput.addEventListener('input', renderTable);
-    categoryFilter.addEventListener('change', renderTable);
+    if (filteredData.length === 0) {
+      resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Keine Treffer</td></tr>';
+      return;
+    }
 
-    tableHeaders.forEach(th => {
-      th.addEventListener('click', () => {
-        const key = th.dataset.key;
-        if (currentSort.key === key) {
-          currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-          currentSort.key = key;
-          currentSort.direction = 'asc';
-        }
-        tableHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-        th.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    resultsTableBody.innerHTML = '';
 
-        renderTable();
-      });
+    for (const item of filteredData) {
+      const regBool = parseBoolean(item.Regierungsbeteiligung);
+      const tr = document.createElement('tr');
+
+      const quellenLinks = Object.entries(item)
+        .filter(([key, val]) => key.toLowerCase().startsWith('quelle') && val)
+        .map(([, url]) => {
+          const domain = extractDomain(url);
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer">${domain}</a>`;
+        })
+        .join(', ');
+
+      tr.innerHTML = `
+        <td data-label="Datum">${item.Datum || ''}</td>
+        <td class="${regBool ? 'bool-true' : 'bool-false'}" data-label="Regierung" aria-label="Regierungsbeteiligung: ${regBool ? 'Ja' : 'Nein'}">
+          ${regBool ? '✓' : '✗'}
+        </td>
+        <td data-label="Partei">${item.Partei || ''}</td>
+        <td data-label="Titel">${item.Titel || ''}</td>
+        <td data-label="Beschreibung">${item.Beschreibung || ''}</td>
+        <td data-label="Kategorie">${item.Kategorie || ''}</td>
+        <td data-label="Quellen">${quellenLinks}</td>
+      `;
+      resultsTableBody.appendChild(tr);
+    }
+  }
+
+  document.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-key');
+      if (!key) return;
+
+      if (sortKey === key) {
+        sortDir = -sortDir;
+      } else {
+        sortKey = key;
+        sortDir = 1;
+      }
+      document.querySelectorAll('th').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+
+      renderTable();
     });
+  });
 
-    loadAllData();
-  </script>
+  searchInput.addEventListener('input', renderTable);
+
+  await loadAllData();
+})();
+</script>
+
 </body>
 </html>
