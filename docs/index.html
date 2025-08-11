@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Durchsuchbare Liste</title>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    input { width: 100%; padding: 8px; font-size: 16px; margin-bottom: 15px; }
+    li { margin-bottom: 10px; }
+    a { color: blue; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Durchsuchbare Liste</h1>
+  <input type="text" id="search" placeholder="Suchbegriff eingeben..." />
+
+  <ul id="results"></ul>
+
+  <script>
+    let data = [];
+
+    // JSON laden (Pfad angepasst!)
+    fetch('../data/liste.json')
+      .then(response => response.json())
+      .then(json => {
+        data = json;
+        showResults(data);
+      })
+      .catch(e => {
+        document.getElementById('results').innerHTML = "<li>Fehler beim Laden der Daten.</li>";
+        console.error(e);
+      });
+
+    const options = {
+      keys: ['Datum', 'Partei', 'Titel', 'Beschreibung', 'Kategorie', 'Quelle1', 'Quelle2'],
+      threshold: 0.3
+    };
+    let fuse;
+
+    const searchInput = document.getElementById('search');
+    const resultsContainer = document.getElementById('results');
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+
+      if (!fuse) fuse = new Fuse(data, options);
+
+      if (!query) {
+        showResults(data);
+        return;
+      }
+      const results = fuse.search(query);
+      showResults(results.map(r => r.item));
+    });
+
+    function showResults(items) {
+      resultsContainer.innerHTML = '';
+      if (items.length === 0) {
+        resultsContainer.innerHTML = '<li>Keine Treffer gefunden.</li>';
+        return;
+      }
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${item.Datum}</strong>: <em>${item.Titel}</em> <br>
+                        Partei: ${item.Partei} <br>
+                        Kategorie: ${item.Kategorie} <br>
+                        Beschreibung: ${item.Beschreibung || '-'} <br>
+                        Quellen: <a href="${item.Quelle1}" target="_blank">Quelle 1</a>, <a href="${item.Quelle2}" target="_blank">Quelle 2</a>`;
+        resultsContainer.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
