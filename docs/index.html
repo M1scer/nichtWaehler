@@ -5,32 +5,136 @@
   <title>Durchsuchbare Liste</title>
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    input { width: 100%; padding: 8px; font-size: 16px; margin-bottom: 15px; }
-    li { margin-bottom: 10px; }
-    a { color: blue; text-decoration: underline; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-content: space-between;
+    }
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 8px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    select {
+      padding: 8px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      min-width: 150px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f1f1;
+      cursor: pointer;
+      user-select: none;
+    }
+    tr:hover {
+      background: #f5faff;
+    }
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 700px) {
+      table, thead, tbody, tr, th, td {
+        display: block;
+      }
+      thead tr {
+        display: none;
+      }
+      tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+      }
+      td {
+        border: none;
+        padding: 6px 0;
+        position: relative;
+        padding-left: 50%;
+      }
+      td::before {
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: bold;
+      }
+      td:nth-of-type(1)::before { content: "Datum"; }
+      td:nth-of-type(2)::before { content: "Titel"; }
+      td:nth-of-type(3)::before { content: "Partei"; }
+      td:nth-of-type(4)::before { content: "Kategorie"; }
+      td:nth-of-type(5)::before { content: "Beschreibung"; }
+      td:nth-of-type(6)::before { content: "Quellen"; }
+    }
   </style>
 </head>
 <body>
   <h1>Durchsuchbare Liste</h1>
-  <input type="text" id="search" placeholder="Suchbegriff eingeben..." />
+  <div class="controls">
+    <input type="text" id="search" placeholder="Suchbegriff eingeben..." aria-label="Suche" />
+    <select id="categoryFilter" aria-label="Kategorie filtern">
+      <option value="">Alle Kategorien</option>
+    </select>
+  </div>
 
-  <ul id="results"></ul>
+  <table id="resultsTable" aria-live="polite" aria-describedby="resultCount">
+    <thead>
+      <tr>
+        <th data-key="Datum">Datum</th>
+        <th data-key="Titel">Titel</th>
+        <th data-key="Partei">Partei</th>
+        <th data-key="Kategorie">Kategorie</th>
+        <th>Beschreibung</th>
+        <th>Quellen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="6">Lade Daten...</td></tr>
+    </tbody>
+  </table>
+  <p id="resultCount" style="margin-top:10px;"></p>
 
   <script>
     let data = [];
+    let filteredData = [];
+    let sortKey = null;
+    let sortAsc = true;
 
-    // JSON laden (Pfad angepasst!)
-    fetch('../data/liste.json')
-      .then(response => response.json())
-      .then(json => {
-        data = json;
-        showResults(data);
-      })
-      .catch(e => {
-        document.getElementById('results').innerHTML = "<li>Fehler beim Laden der Daten.</li>";
-        console.error(e);
-      });
+    const searchInput = document.getElementById('search');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const resultsTableBody = document.querySelector('#resultsTable tbody');
+    const resultCount = document.getElementById('resultCount');
 
     const options = {
       keys: ['Datum', 'Partei', 'Titel', 'Beschreibung', 'Kategorie', 'Quelle1', 'Quelle2'],
@@ -38,38 +142,118 @@
     };
     let fuse;
 
-    const searchInput = document.getElementById('search');
-    const resultsContainer = document.getElementById('results');
+    // Lade JSON Daten
+    fetch('../data/liste.json')
+      .then(r => r.json())
+      .then(json => {
+        data = json;
+        filteredData = data.slice();
 
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.trim();
+        // Kategorien für Filter ermitteln und Dropdown füllen
+        const categories = [...new Set(data.map(item => item.Kategorie).filter(Boolean))].sort();
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = cat;
+          categoryFilter.appendChild(opt);
+        });
 
-      if (!fuse) fuse = new Fuse(data, options);
+        fuse = new Fuse(data, options);
 
-      if (!query) {
-        showResults(data);
-        return;
+        renderTable(filteredData);
+        updateResultCount(filteredData.length);
+      })
+      .catch(e => {
+        resultsTableBody.innerHTML = '<tr><td colspan="6">Fehler beim Laden der Daten.</td></tr>';
+        console.error(e);
+      });
+
+    // Filter + Suche zusammenführen
+    function filterAndSearch() {
+      let result = data;
+
+      // Kategorie filtern
+      const selectedCategory = categoryFilter.value;
+      if (selectedCategory) {
+        result = result.filter(item => item.Kategorie === selectedCategory);
       }
-      const results = fuse.search(query);
-      showResults(results.map(r => r.item));
-    });
 
-    function showResults(items) {
-      resultsContainer.innerHTML = '';
+      // Suche mit Fuse.js
+      const query = searchInput.value.trim();
+      if (query) {
+        const fuseResults = fuse.search(query);
+        const fuseItems = fuseResults.map(r => r.item);
+        // Wenn Kategorie gefiltert ist, nochmal filtern
+        if (selectedCategory) {
+          filteredData = fuseItems.filter(item => item.Kategorie === selectedCategory);
+        } else {
+          filteredData = fuseItems;
+        }
+      } else {
+        filteredData = result;
+      }
+
+      renderTable(filteredData);
+      updateResultCount(filteredData.length);
+    }
+
+    searchInput.addEventListener('input', filterAndSearch);
+    categoryFilter.addEventListener('change', filterAndSearch);
+
+    // Tabelle rendern
+    function renderTable(items) {
+      resultsTableBody.innerHTML = '';
       if (items.length === 0) {
-        resultsContainer.innerHTML = '<li>Keine Treffer gefunden.</li>';
+        resultsTableBody.innerHTML = '<tr><td colspan="6">Keine Treffer gefunden.</td></tr>';
         return;
       }
       items.forEach(item => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${item.Datum}</strong>: <em>${item.Titel}</em> <br>
-                        Partei: ${item.Partei} <br>
-                        Kategorie: ${item.Kategorie} <br>
-                        Beschreibung: ${item.Beschreibung || '-'} <br>
-                        Quellen: <a href="${item.Quelle1}" target="_blank">Quelle 1</a>, <a href="${item.Quelle2}" target="_blank">Quelle 2</a>`;
-        resultsContainer.appendChild(li);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.Datum}</td>
+          <td>${escapeHtml(item.Titel)}</td>
+          <td>${escapeHtml(item.Partei)}</td>
+          <td>${escapeHtml(item.Kategorie)}</td>
+          <td>${escapeHtml(item.Beschreibung || '-')}</td>
+          <td>
+            <a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Quelle 1</a><br>
+            <a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Quelle 2</a>
+          </td>
+        `;
+        resultsTableBody.appendChild(tr);
       });
     }
-  </script>
-</body>
-</html>
+
+    // Escape HTML, um XSS zu verhindern (einfacher Schutz)
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Ergebniszähler aktualisieren
+    function updateResultCount(count) {
+      resultCount.textContent = `Treffer: ${count}`;
+    }
+
+    // Optionale Sortierung bei Klick auf Spaltenüberschriften
+    document.querySelectorAll('th[data-key]').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.getAttribute('data-key');
+        if (sortKey === key) {
+          sortAsc = !sortAsc;
+        } else {
+          sortKey = key;
+          sortAsc = true;
+        }
+        sortTable(sortKey, sortAsc);
+        renderTable(filteredData);
+      });
+    });
+
+    function sortTable(key, asc) {
+      filtered
