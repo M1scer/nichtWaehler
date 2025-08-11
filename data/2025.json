@@ -4,9 +4,19 @@
     "Partei": "CDU/CSU",
     "Regierungsbeteiligung": false,
     "Titel": "Kehrtwende Schuldenbremse",
-    "Beschreibung": "Erstes Meeting im August",
+    "Beschreibung": "Die Union legt eine Kehrtwende bei der Schuldenbremse ein. Im Wahlkampf war das noch ausgeschlossen, jetzt gibt es ein Sondervermögen.",
     "Kategorie": "Haushalt",
     "Quelle1": "https://www.zdfheute.de/politik/deutschland/sondierungen-sondervermoegen-schuldenbremse-reaktionen-cdu-spd-100.html",
     "Quelle2": "https://www.n-tv.de/politik/Was-Merz-im-Wahlkampf-sagte-und-was-jetzt-article25589350.html"
-  }
+  },
+  {
+  "Datum": "2025-01-29",
+  "Partei": "CDU/CSU",
+  "Regierungsbeteiligung": false,
+  "Titel": "Gemeinsame Abstimmung mit der AFD",
+  "Beschreibung": "Entgegen der Brandmauer hat die CDU/CSU gemeinsam mit der AFD abgestimmt.",
+  "Kategorie": "Brandmauer",
+  "Quelle1": "https://www1.wdr.de/nachrichten/wahlen/bundestagswahl-2025/bundestag-beschluss-migration-100.html",
+  "Quelle2": "https://www.rtl.de/news/bundestag-afd-stimmt-im-migrationsstreit-mit-der-cdu-ab-id2057793.html"
+}
 ]
