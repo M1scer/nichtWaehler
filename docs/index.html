@@ -48,11 +48,19 @@
       border-bottom: 1px solid #eee;
       text-align: left;
       vertical-align: top;
+      user-select: none;
     }
     th {
       background: #f1f1f1;
       cursor: pointer;
-      user-select: none;
+    }
+    th.sort-asc::after {
+      content: " ▲";
+      font-size: 12px;
+    }
+    th.sort-desc::after {
+      content: " ▼";
+      font-size: 12px;
     }
     tr:hover {
       background: #f5faff;
@@ -63,6 +71,9 @@
     }
     a:hover {
       text-decoration: underline;
+    }
+    td.center {
+      text-align: center;
     }
     @media (max-width: 700px) {
       table, thead, tbody, tr, th, td {
@@ -93,9 +104,10 @@
       td:nth-of-type(1)::before { content: "Datum"; }
       td:nth-of-type(2)::before { content: "Titel"; }
       td:nth-of-type(3)::before { content: "Partei"; }
-      td:nth-of-type(4)::before { content: "Kategorie"; }
-      td:nth-of-type(5)::before { content: "Beschreibung"; }
-      td:nth-of-type(6)::before { content: "Quellen"; }
+      td:nth-of-type(4)::before { content: "Regierungsbeteiligung"; }
+      td:nth-of-type(5)::before { content: "Kategorie"; }
+      td:nth-of-type(6)::before { content: "Beschreibung"; }
+      td:nth-of-type(7)::before { content: "Quellen"; }
     }
   </style>
 </head>
@@ -114,13 +126,14 @@
         <th data-key="Datum">Datum</th>
         <th data-key="Titel">Titel</th>
         <th data-key="Partei">Partei</th>
+        <th data-key="Regierungsbeteiligung">Regierungsbeteiligung</th>
         <th data-key="Kategorie">Kategorie</th>
         <th>Beschreibung</th>
         <th>Quellen</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td colspan="6">Lade Daten...</td></tr>
+      <tr><td colspan="7">Lade Daten...</td></tr>
     </tbody>
   </table>
   <p id="resultCount" style="margin-top:10px;"></p>
@@ -142,14 +155,14 @@
     };
     let fuse;
 
-    // Lade JSON Daten
+    // Daten laden
     fetch('../data/liste.json')
       .then(r => r.json())
       .then(json => {
         data = json;
         filteredData = data.slice();
 
-        // Kategorien für Filter ermitteln und Dropdown füllen
+        // Kategorien füllen
         const categories = [...new Set(data.map(item => item.Kategorie).filter(Boolean))].sort();
         categories.forEach(cat => {
           const opt = document.createElement('option');
@@ -164,26 +177,23 @@
         updateResultCount(filteredData.length);
       })
       .catch(e => {
-        resultsTableBody.innerHTML = '<tr><td colspan="6">Fehler beim Laden der Daten.</td></tr>';
+        resultsTableBody.innerHTML = '<tr><td colspan="7">Fehler beim Laden der Daten.</td></tr>';
         console.error(e);
       });
 
-    // Filter + Suche zusammenführen
+    // Filter + Suche zusammen
     function filterAndSearch() {
       let result = data;
 
-      // Kategorie filtern
       const selectedCategory = categoryFilter.value;
       if (selectedCategory) {
         result = result.filter(item => item.Kategorie === selectedCategory);
       }
 
-      // Suche mit Fuse.js
       const query = searchInput.value.trim();
       if (query) {
         const fuseResults = fuse.search(query);
         const fuseItems = fuseResults.map(r => r.item);
-        // Wenn Kategorie gefiltert ist, nochmal filtern
         if (selectedCategory) {
           filteredData = fuseItems.filter(item => item.Kategorie === selectedCategory);
         } else {
@@ -193,7 +203,11 @@
         filteredData = result;
       }
 
-      renderTable(filteredData);
+      if (sortKey) {
+        sortTable(sortKey, sortAsc);
+      } else {
+        renderTable(filteredData);
+      }
       updateResultCount(filteredData.length);
     }
 
@@ -204,27 +218,32 @@
     function renderTable(items) {
       resultsTableBody.innerHTML = '';
       if (items.length === 0) {
-        resultsTableBody.innerHTML = '<tr><td colspan="6">Keine Treffer gefunden.</td></tr>';
+        resultsTableBody.innerHTML = '<tr><td colspan="7">Keine Treffer gefunden.</td></tr>';
         return;
       }
       items.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.Datum}</td>
-          <td>${escapeHtml(item.Titel)}</td>
-          <td>${escapeHtml(item.Partei)}</td>
-          <td>${escapeHtml(item.Kategorie)}</td>
-          <td>${escapeHtml(item.Beschreibung || '-')}</td>
-          <td>
-            <a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Quelle 1</a><br>
-            <a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Quelle 2</a>
-          </td>
-        `;
-        resultsTableBody.appendChild(tr);
+        resultsTableBody.appendChild(createRow(item));
       });
     }
 
-    // Escape HTML, um XSS zu verhindern (einfacher Schutz)
+    function createRow(item) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.Datum}</td>
+        <td>${escapeHtml(item.Titel)}</td>
+        <td>${escapeHtml(item.Partei)}</td>
+        <td class="center">${item.Regierungsbeteiligung === true || item.Regierungsbeteiligung === "true" ? '✅' : '❌'}</td>
+        <td>${escapeHtml(item.Kategorie)}</td>
+        <td>${escapeHtml(item.Beschreibung || '-')}</td>
+        <td>
+          ${item.Quelle1 ? `<a href="${item.Quelle1}" target="_blank" rel="noopener noreferrer">Quelle 1</a>` : ''}
+          ${item.Quelle2 ? `<br><a href="${item.Quelle2}" target="_blank" rel="noopener noreferrer">Quelle 2</a>` : ''}
+        </td>
+      `;
+      return tr;
+    }
+
+    // HTML escapen (sicher)
     function escapeHtml(text) {
       if (!text) return '';
       return text
@@ -235,25 +254,13 @@
         .replace(/'/g, "&#039;");
     }
 
-    // Ergebniszähler aktualisieren
+    // Ergebniszahl aktualisieren
     function updateResultCount(count) {
       resultCount.textContent = `Treffer: ${count}`;
     }
 
-    // Optionale Sortierung bei Klick auf Spaltenüberschriften
+    // Sortierung implementieren
     document.querySelectorAll('th[data-key]').forEach(th => {
       th.addEventListener('click', () => {
         const key = th.getAttribute('data-key');
-        if (sortKey === key) {
-          sortAsc = !sortAsc;
-        } else {
-          sortKey = key;
-          sortAsc = true;
-        }
-        sortTable(sortKey, sortAsc);
-        renderTable(filteredData);
-      });
-    });
-
-    function sortTable(key, asc) {
-      filtered
+        if (sortKey === key)
