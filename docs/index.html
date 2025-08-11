@@ -5,133 +5,163 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NichtWähler</title>
 <style>
+  /* Reset & Grundlayout */
+  * {
+    box-sizing: border-box;
+  }
   body {
-    font-family: Arial, sans-serif;
-    margin: 1rem 2rem;
-    background: #fdfdfd;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f8fa;
     color: #222;
+    margin: 1.5rem 2rem;
   }
   h1 {
+    color: #2c3e50;
     margin-bottom: 1rem;
-    color: #003366;
   }
   input[type="search"] {
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    border: 1px solid #aaa;
-    border-radius: 4px;
+    font-size: 1.1rem;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.25s ease;
   }
+  input[type="search"]:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 5px #2980b9;
+  }
+
+  /* Tabelle modern */
   table {
-    border-collapse: collapse;
     width: 100%;
-    box-shadow: 0 0 12px #ddd;
-    background: white;
-    border-radius: 6px;
+    border-collapse: collapse;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.1);
+    border-radius: 12px;
     overflow: hidden;
+    background: white;
+  }
+  thead {
+    background: linear-gradient(90deg, #2980b9, #3498db);
+    color: white;
+    user-select: none;
   }
   th, td {
-    padding: 0.65rem 1rem;
-    border-bottom: 1px solid #eee;
+    padding: 12px 20px;
     text-align: left;
     vertical-align: middle;
   }
+  tbody tr {
+    border-bottom: 1px solid #ecf0f1;
+    transition: background-color 0.25s ease;
+  }
+  tbody tr:hover {
+    background-color: #f0f8ff;
+  }
   th {
-    background-color: #004080;
-    color: white;
-    user-select: none;
     cursor: pointer;
     position: relative;
   }
   th.sort-asc::after {
-    content: " ▲";
+    content: "▲";
     position: absolute;
-    right: 10px;
+    right: 15px;
+    font-size: 0.8rem;
   }
   th.sort-desc::after {
-    content: " ▼";
+    content: "▼";
     position: absolute;
-    right: 10px;
+    right: 15px;
+    font-size: 0.8rem;
   }
-  tr:nth-child(even) {
-    background-color: #f9fbff;
-  }
-  tr:hover {
-    background-color: #e6f0ff;
-  }
-  .bool-true {
-    color: green;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.2em;
-  }
-  .bool-false {
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.2em;
-  }
-  a {
-    color: #0066cc;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  @media (max-width: 700px) {
+  /* Responsive */
+  @media (max-width: 900px) {
     table, thead, tbody, th, td, tr {
       display: block;
     }
     thead tr {
       display: none;
     }
-    tr {
-      margin-bottom: 1.2rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 0.5rem;
+    tbody tr {
+      margin-bottom: 1rem;
       background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgb(0 0 0 / 0.05);
+      padding: 1rem;
     }
-    td {
-      border: none;
-      padding-left: 50%;
+    tbody td {
+      padding: 8px 12px;
+      text-align: right;
       position: relative;
-      text-align: left;
+      border-bottom: 1px solid #eee;
     }
-    td::before {
+    tbody td:last-child {
+      border-bottom: none;
+    }
+    tbody td::before {
       content: attr(data-label);
       position: absolute;
-      left: 1rem;
-      top: 0.6rem;
-      font-weight: bold;
-      color: #004080;
-      white-space: nowrap;
+      left: 12px;
+      width: 50%;
+      padding-left: 10px;
+      font-weight: 700;
+      text-align: left;
+      color: #2980b9;
     }
+  }
+
+  /* ✓ / ✗ Styling */
+  .bool-true {
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  .bool-false {
+    color: #c0392b;
+    font-weight: bold;
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  /* Links */
+  a {
+    color: #2980b9;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  /* Fehlermeldung */
+  #resultsTableBody td[colspan="7"] {
+    text-align: center;
+    font-style: italic;
+    color: #555;
   }
 </style>
 </head>
 <body>
-<h1>NichtWähler</h1>
-<input id="searchInput" type="search" placeholder="Suche nach Partei, Titel, Kategorie..." aria-label="Suche" />
+  <h1>NichtWähler</h1>
+  <input id="searchInput" type="search" placeholder="Suche nach Partei, Titel, Kategorie..." aria-label="Suche" />
 
-<table aria-label="Datenübersicht">
-  <thead>
-    <tr>
-      <th data-key="Datum">Datum</th>
-      <th data-key="Regierungsbeteiligung">Regierung</th>
-      <th data-key="Partei">Partei</th>
-      <th data-key="Titel">Titel</th>
-      <th data-key="Beschreibung">Beschreibung</th>
-      <th data-key="Kategorie">Kategorie</th>
-      <th data-key="Quellen">Quellen</th>
-    </tr>
-  </thead>
-  <tbody id="resultsTableBody">
-    <tr><td colspan="7" style="text-align:center">Daten werden geladen...</td></tr>
-  </tbody>
-</table>
+  <table aria-label="Datenübersicht">
+    <thead>
+      <tr>
+        <th data-key="Datum" scope="col" tabindex="0">Datum</th>
+        <th data-key="Regierungsbeteiligung" scope="col" tabindex="0">Regierung</th>
+        <th data-key="Partei" scope="col" tabindex="0">Partei</th>
+        <th data-key="Titel" scope="col" tabindex="0">Titel</th>
+        <th data-key="Beschreibung" scope="col" tabindex="0">Beschreibung</th>
+        <th data-key="Kategorie" scope="col" tabindex="0">Kategorie</th>
+        <th data-key="Quellen" scope="col" tabindex="0">Quellen</th>
+      </tr>
+    </thead>
+    <tbody id="resultsTableBody">
+      <tr><td colspan="7">Daten werden geladen...</td></tr>
+    </tbody>
+  </table>
 
 <script>
 (async () => {
@@ -163,7 +193,7 @@
   }
 
   async function loadData() {
-    resultsBody.innerHTML = `<tr><td colspan="7" style="text-align:center">Lade Dateiliste...</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="7">Lade Dateiliste...</td></tr>`;
     try {
       const resFiles = await fetch(filesListUrl);
       if (!resFiles.ok) throw new Error('files.json nicht gefunden');
@@ -185,7 +215,7 @@
       allEntries = dataArrays.flat();
       renderTable();
     } catch (e) {
-      resultsBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: red;">Fehler: ${e.message}</td></tr>`;
+      resultsBody.innerHTML = `<tr><td colspan="7" style="color: red;">Fehler: ${e.message}</td></tr>`;
     }
   }
 
@@ -201,7 +231,6 @@
         let aVal = a[currentSortKey] ?? '';
         let bVal = b[currentSortKey] ?? '';
 
-        // Für Regierungsbeteiligung sortieren wir nach boolean
         if (currentSortKey === 'Regierungsbeteiligung') {
           aVal = parseBoolean(aVal) ? 1 : 0;
           bVal = parseBoolean(bVal) ? 1 : 0;
@@ -216,7 +245,7 @@
     }
 
     if (filtered.length === 0) {
-      resultsBody.innerHTML = `<tr><td colspan="7" style="text-align:center">Keine Ergebnisse gefunden</td></tr>`;
+      resultsBody.innerHTML = `<tr><td colspan="7">Keine Ergebnisse gefunden</td></tr>`;
       return;
     }
 
@@ -236,7 +265,7 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td data-label="Datum">${entry.Datum || ''}</td>
-        <td data-label="Regierung" class="${regBool ? 'bool-true' : 'bool-false'}" aria-label="Regierungsbeteiligung: ${regBool ? 'Ja' : 'Nein'}">
+        <td data-label="Regierung" class="${regBool ? 'bool-true' : 'bool-false'}" style="text-align:center;">
           ${regBool ? '✓' : '✗'}
         </td>
         <td data-label="Partei">${entry.Partei || ''}</td>
@@ -249,4 +278,37 @@
     }
   }
 
-  // Sortieren bei Klick
+  // Sortierung bei Klick auf Spaltenüberschrift
+  document.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-key');
+      if (currentSortKey === key) {
+        currentSortDir = -currentSortDir; // umkehren
+      } else {
+        currentSortKey = key;
+        currentSortDir = 1;
+      }
+      // Alle th Klassen zurücksetzen
+      document.querySelectorAll('th').forEach(th2 => {
+        th2.classList.remove('sort-asc', 'sort-desc');
+      });
+      th.classList.add(currentSortDir === 1 ? 'sort-asc' : 'sort-desc');
+      renderTable();
+    });
+    // Keyboard Accessibility: sortieren auch per Enter
+    th.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        th.click();
+      }
+    });
+  });
+
+  searchInput.addEventListener('input', renderTable);
+
+  await loadData();
+})();
+</script>
+
+</body>
+</html>
