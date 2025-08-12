@@ -33,7 +33,7 @@ Einflussnahme von Interessengruppen oder Unternehmen auf politische Entscheidung
 Handlungen oder Gesetze, die hauptsächlich dem Zweck dienen, ein positives Bild nach außen zu vermitteln oder politische Aufmerksamkeit zu erzeugen, dabei aber keine wirklichen oder nachhaltigen Verbesserungen bewirken.
 
 ### Wahlgeschenke  
-Politische Versprechen oder kurzfristige Maßnahmen, die in erster Linie darauf abzielen, bei Wahlen Stimmen zu gewinnen, ohne dass die Maßnahmen langfristig sinnvoll oder finanzierbar sind.
+Politische Versprechen oder kurzfristige Maßnahmen, die in erster Linie darauf abzielen, bei Wahlen Stimmen zu gewinnen, ohne dass die Maßnahmen langfristig sinnvoll oder finanzierbar sind. Dazu zählt auch das bewusste Täuschen oder Falschaussagen vor Wahlen, bei denen eine Partei oder ein Akteur Versprechen macht, die nach der Wahl nicht eingehalten werden, um politische Vorteile zu erlangen.
 
 ### Korruption  
 Fälle, in denen politische Akteure ihre Position ausnutzen, um sich persönlich oder für bestimmte Dritte finanzielle Vorteile oder sonstige Privilegien zu verschaffen, oft verbunden mit Geheimhaltung und Betrug.
