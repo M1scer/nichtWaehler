@@ -148,12 +148,20 @@
 </style>
 </head>
 <body>
-  <h1 style="margin: 0;">NichtWähler</h1>
-  <p style="margin: 0; font-size: 0.9rem; color: #555; max-width: 500px;">
-    Trotz allem: Geh wählen – nur so kannst du Veränderung bewirken!  
-    Und wenn du wissen willst, welche guten Entscheidungen schon getroffen wurden, schau bei den <a href="https://m1scer.github.io/dochWaehler/" style="color:#2980b9; text-decoration:none;">„DochWähler“-Highlights</a> vorbei.
-  </p>
-</header>
+  <header style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; margin-bottom: 1.5rem; gap: 1rem; max-width: 1000px;">
+    <div style="flex: 1; min-width: 280px;">
+      <h1 style="margin: 0 0 0.5rem 0;">NichtWähler</h1>
+      <input id="searchInput" type="search" placeholder="Suche nach Partei, Titel, Kategorie..." aria-label="Suche"
+             style="width: 100%; max-width: 420px; padding: 0.5rem 0.75rem; font-size: 1.1rem; border: 2px solid #3498db; border-radius: 8px; transition: border-color 0.25s ease;">
+    </div>
+    <div style="flex: 1; min-width: 280px; font-size: 0.95rem; color: #555; max-width: 450px; line-height: 1.4;">
+      <p style="margin: 0;">
+        Trotz allem: Geh wählen – nur so kannst du Veränderung bewirken!  
+        Und wenn du wissen willst, welche guten Entscheidungen schon getroffen wurden, schau bei den 
+        <a href="https://m1scer.github.io/dochWaehler/" style="color:#2980b9; text-decoration:none;">„DochWähler“-Highlights</a> vorbei.
+      </p>
+    </div>
+  </header>
   <input id="searchInput" type="search" placeholder="Suche nach Partei, Titel, Kategorie..." aria-label="Suche" />
 
   <table aria-label="Datenübersicht">
