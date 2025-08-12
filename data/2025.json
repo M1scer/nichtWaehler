@@ -18,5 +18,15 @@
     "Kategorie": "Brandmauer",
     "Quelle1": "https://www1.wdr.de/nachrichten/wahlen/bundestagswahl-2025/bundestag-beschluss-migration-100.html",
     "Quelle2": "https://www.rtl.de/news/bundestag-afd-stimmt-im-migrationsstreit-mit-der-cdu-ab-id2057793.html"
+  },
+  {
+    "Datum": "2025-04-12",
+    "Partei": "CDU/CSU",
+    "Regierungsbeteiligung": false,
+    "Titel": "Normalisierung der AFD",
+    "Beschreibung": "Jens Spahn hat vorgeschlagen, mit der AfD umzugehen \"wie mit jeder anderen Oppositionspartei auch\".",
+    "Kategorie": "Brandmauer",
+    "Quelle1": "https://de.euronews.com/my-europe/2025/04/15/kritik-spahn-cdu-afd-normalisierung",
+    "Quelle2": "https://www.n-tv.de/politik/Spahn-will-mit-AfD-umgehen-wie-mit-jeder-anderen-Partei-article25700429.html"
   }
 ]
