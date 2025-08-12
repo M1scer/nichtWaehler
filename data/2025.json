@@ -5,7 +5,7 @@
     "Regierungsbeteiligung": false,
     "Titel": "Kehrtwende Schuldenbremse",
     "Beschreibung": "Die Union legt eine Kehrtwende bei der Schuldenbremse ein. Im Wahlkampf war das noch ausgeschlossen, jetzt gibt es ein Sondervermögen.",
-    "Kategorie": "Haushalt",
+    "Kategorie": "Wahlgeschenke",
     "Quelle1": "https://www.zdfheute.de/politik/deutschland/sondierungen-sondervermoegen-schuldenbremse-reaktionen-cdu-spd-100.html",
     "Quelle2": "https://www.n-tv.de/politik/Was-Merz-im-Wahlkampf-sagte-und-was-jetzt-article25589350.html"
   },
@@ -15,7 +15,7 @@
     "Regierungsbeteiligung": false,
     "Titel": "Gemeinsame Abstimmung mit der AFD",
     "Beschreibung": "Entgegen der Brandmauer hat die CDU/CSU gemeinsam mit der AFD abgestimmt.",
-    "Kategorie": "Brandmauer",
+    "Kategorie": "Demokratiefeindlichkeit",
     "Quelle1": "https://www1.wdr.de/nachrichten/wahlen/bundestagswahl-2025/bundestag-beschluss-migration-100.html",
     "Quelle2": "https://www.rtl.de/news/bundestag-afd-stimmt-im-migrationsstreit-mit-der-cdu-ab-id2057793.html"
   },
@@ -25,7 +25,7 @@
     "Regierungsbeteiligung": true,
     "Titel": "Normalisierung der AFD",
     "Beschreibung": "Jens Spahn hat vorgeschlagen, mit der AfD umzugehen \"wie mit jeder anderen Oppositionspartei auch\".",
-    "Kategorie": "Brandmauer",
+    "Kategorie": "Demokratiefeindlichkeit",
     "Quelle1": "https://de.euronews.com/my-europe/2025/04/15/kritik-spahn-cdu-afd-normalisierung",
     "Quelle2": "https://www.n-tv.de/politik/Spahn-will-mit-AfD-umgehen-wie-mit-jeder-anderen-Partei-article25700429.html"
   }
